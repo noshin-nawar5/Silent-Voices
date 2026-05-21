@@ -1,0 +1,30 @@
+:root {
+  --rose:       #f43f5e;
+  --rose-light: #fda4af;
+  --rose-pale:  #fff1f2;
+  --blush:      #fce7f3;
+  --lilac:      #e9d5ff;
+  --violet:     #a855f7;
+  --violet-deep:#7c3aed;
+  --teal:       #2dd4bf;
+  --cream:      #fdf4ff;
+  --charcoal:   #1e1b2e;
+  --muted:      #9d8fa8;
+  --glass:      rgba(255,255,255,0.6);
+  --radius:     20px;
+  --radius-sm:  12px;
+  --shadow:     0 8px 40px rgba(244,63,94,0.10);
+  --shadow-lg:  0 20px 60px rgba(168,85,247,0.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--charcoal);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--blush); }
+::-webkit-scrollbar-thumb { background: var(--rose-light); border-radius: 10px; }
