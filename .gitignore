@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.env
+.venv
+env/
+venv/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# ML model files (too large — use Git LFS or HuggingFace Hub)
+*.h5
+*.keras
+*.pkl
+*.pt
+*.pth
+ml/processed_dataset/
+ml/class_indices.json
+ml/*.png
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
