@@ -14,15 +14,31 @@ BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH  = os.path.join(BASE_DIR, "bangla_sign_model.h5")
 CI_PATH     = os.path.join(BASE_DIR, "class_indices.json")
 LABELS_PATH = os.path.join(BASE_DIR, "labels.json")
-IMG_SIZE    = (224, 224)
+IMG_SIZE    = (96, 96)
 
 # ── Load on startup ───────────────────────────────────────────────────────
+from huggingface_hub import hf_hub_download
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model from HuggingFace...")
+    hf_hub_download(
+        repo_id="YOUR_HF_USERNAME/silent-voices-model",
+        filename="bangla_sign_model.h5",
+        local_dir=BASE_DIR
+    )
+    hf_hub_download(
+        repo_id="noshin-nawar/silent-voices-model",
+        filename="class_indices.json",
+        local_dir=BASE_DIR
+    )
+    print("✅ Downloaded.")
+
 print("Loading model…")
 model = load_model(MODEL_PATH)
 print("✅ Model loaded.")
 
-with open(CI_PATH)     as f: class_indices = json.load(f)
-with open(LABELS_PATH) as f: labels_raw    = json.load(f)
+with open(CI_PATH,     encoding='utf-8') as f: class_indices = json.load(f)
+with open(LABELS_PATH, encoding='utf-8') as f: labels_raw    = json.load(f)
 
 # Flat label map: folder_name → {display, roman, name, type}
 LABEL_MAP   = {**labels_raw["digits"], **labels_raw["alphabets"]}
