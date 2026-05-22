@@ -1,0 +1,47 @@
+# This file is used by Probot settings app
+# Install at: https://github.com/apps/settings
+
+repository:
+  name: Silent-Voices-
+  description: "🤙 AI-powered Bangla Sign Language recognizer — 47 signs (digits + full alphabet) using MobileNetV2"
+  homepage: https://silent-voices.vercel.app
+  topics:
+    - bangla-sign-language
+    - sign-language-recognition
+    - deep-learning
+    - tensorflow
+    - mobilenetv2
+    - transfer-learning
+    - react
+    - flask
+    - computer-vision
+    - accessibility
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+
+labels:
+  - name: bug
+    color: f43f5e
+    description: Something isn't working
+  - name: enhancement
+    color: a855f7
+    description: New feature or request
+  - name: documentation
+    color: fda4af
+    description: Improvements to docs
+  - name: good first issue
+    color: c084fc
+    description: Good for newcomers
+  - name: help wanted
+    color: e879a3
+    description: Extra attention needed
+  - name: ml
+    color: f9a8d4
+    description: Related to the ML model
+  - name: frontend
+    color: ddd6fe
+    description: Related to the UI
+  - name: backend
+    color: a5f3fc
+    description: Related to the API
