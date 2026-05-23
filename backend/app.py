@@ -22,16 +22,20 @@ from huggingface_hub import hf_hub_download
 if not os.path.exists(MODEL_PATH):
     print("Downloading model from HuggingFace...")
     hf_hub_download(
-        repo_id="YOUR_HF_USERNAME/silent-voices-model",
+        repo_id="noshin-nawar/silent-voices-model",
         filename="bangla_sign_model.h5",
         local_dir=BASE_DIR
     )
+    print("✅ Model downloaded.")
+
+if not os.path.exists(CI_PATH):
+    print("Downloading class indices...")
     hf_hub_download(
         repo_id="noshin-nawar/silent-voices-model",
         filename="class_indices.json",
         local_dir=BASE_DIR
     )
-    print("✅ Downloaded.")
+    print("✅ Class indices downloaded.")
 
 print("Loading model…")
 model = load_model(MODEL_PATH)
