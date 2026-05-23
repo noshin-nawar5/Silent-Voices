@@ -54,7 +54,7 @@ def load_everything():
         from tensorflow.keras.models import load_model as tf_load
 
         print("Loading model...", flush=True)
-        _model = tf_load(MODEL_PATH)
+        _model = tf_load(MODEL_PATH, compile=False)
 
         with open(CI_PATH,     encoding="utf-8") as f: ci         = json.load(f)
         with open(LABELS_PATH, encoding="utf-8") as f: labels_raw = json.load(f)
