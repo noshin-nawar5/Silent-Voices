@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/noshin-nawar5/Silent-Voices-/main/assets/banner.png" alt="Silent Voices Banner" width="100%"/>
-
 # 🤙 Silent Voices
 ### Bangla Sign Language Recognition System
 
@@ -9,14 +7,15 @@
 
 <br/>
 
-[![Live Demo](https://img.shields.io/badge/🌸_Live_Demo-Visit_Site-f43f5e?style=for-the-badge)](https://silent-voices-three.vercel.app/
+[![Live Demo](https://img.shields.io/badge/🌸_Live_Demo-Visit_Site-f43f5e?style=for-the-badge)](https://silent-voices-three.vercel.app)
 [![API Status](https://img.shields.io/badge/API-Render-46e3b7?style=for-the-badge&logo=render)](https://silent-voices-1.onrender.com)
+[![HuggingFace](https://img.shields.io/badge/🤗_Model-HuggingFace-ffcc00?style=for-the-badge)](https://huggingface.co/noshin-nawar/silent-voices-model)
 [![License](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge)](LICENSE)
 
 <br/>
 
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel&logoColor=white)
@@ -24,13 +23,17 @@
 
 <br/>
 
+> 🌐 **Live:** [silent-voices-three.vercel.app](https://silent-voices-three.vercel.app)
+>
+> 🔌 **API:** [silent-voices-1.onrender.com](https://silent-voices-1.onrender.com)
+
 </div>
 
 ---
 
 ## 📌 Overview
 
-**Silent Voices** is an AI-powered web application that recognizes **47 Bangla Sign Language signs** from a hand photo — covering the full alphabet and digit set.
+**Silent Voices** is an AI-powered web application that recognizes **47 Bangla Sign Language signs** from a hand photo — covering the full digit set and alphabet.
 
 Upload any hand-sign image and the model instantly identifies the corresponding Bangla character with confidence scores.
 
@@ -59,12 +62,12 @@ Upload any hand-sign image and the model instantly identifies the corresponding 
 
 | Layer | Technology |
 |-------|-----------|
-| ML Model | MobileNetV2 (Transfer Learning, TensorFlow 2.16) |
+| ML Model | MobileNetV2 Transfer Learning (TensorFlow 2.15) |
 | Backend | Python · Flask · Gunicorn |
 | Frontend | React 18 · Vite · Framer Motion |
+| Model Hosting | HuggingFace Hub |
 | Deployment (FE) | Vercel |
 | Deployment (BE) | Render |
-| Model Hosting | HuggingFace Hub |
 
 ---
 
@@ -76,14 +79,14 @@ Silent-Voices-/
 │   ├── train_model.ipynb     # MobileNetV2 training pipeline (47 classes)
 │   └── requirements.txt
 ├── 🐍 backend/
-│   ├── app.py                # Flask REST API
-│   ├── labels.json           # 47 class → Bangla char map
+│   ├── app.py                # Flask REST API (lazy model loading)
+│   ├── labels.json           # 47 class → Bangla character map
 │   ├── requirements.txt
-│   └── render.yaml           # Render deploy config
+│   └── render.yaml
 ├── ⚛️ frontend/
 │   ├── src/
 │   │   ├── App.jsx           # Main UI
-│   │   ├── App.css           # Girly theme
+│   │   ├── App.css           # Girly pink/lilac theme
 │   │   ├── labels.js         # Frontend label map
 │   │   ├── main.jsx
 │   │   └── index.css
@@ -91,9 +94,9 @@ Silent-Voices-/
 │   ├── package.json
 │   ├── vite.config.js
 │   └── vercel.json
-├── 📄 LICENSE
-├── 📄 README.md
-└── 📄 .gitignore
+├── LICENSE
+├── README.md
+└── .gitignore
 ```
 
 ---
@@ -101,38 +104,31 @@ Silent-Voices-/
 ## 🚀 Local Setup
 
 ### Prerequisites
-
-- Python 3.9+
+- Python 3.11+
 - Node.js 18+
-- Git
 
 ### 1. Clone
-
 ```bash
-git clone https://github.com/YOUR_USERNAME/Silent-Voices-.git
+git clone https://github.com/noshin-nawar5/Silent-Voices-.git
 cd Silent-Voices-
 ```
 
 ### 2. Backend
-
 ```bash
 cd backend
 pip install -r requirements.txt
-
-# Download model files from HuggingFace (see Model section below)
+# Download model from https://huggingface.co/noshin-nawar/silent-voices-model
 # Place bangla_sign_model.h5 and class_indices.json in backend/
-
 python app.py
 # → http://localhost:5000
 ```
 
 ### 3. Frontend
-
 ```bash
 cd frontend
 npm install
 cp .env.example .env.local
-# Edit .env.local → VITE_API_URL=http://localhost:5000
+# Set VITE_API_URL=http://localhost:5000
 npm run dev
 # → http://localhost:5173
 ```
@@ -144,27 +140,26 @@ npm run dev
 | Property | Value |
 |----------|-------|
 | Architecture | MobileNetV2 + custom head |
-| Input | 224 × 224 × 3 |
-| Output | Softmax over 47 classes |
-| Training | 2-phase transfer learning |
-| Phase 1 | Head only, LR=1e-3, base frozen |
-| Phase 2 | Last 40 layers unfrozen, LR=1e-5 |
+| Input Size | 96 × 96 × 3 |
+| Output | Softmax — 47 classes |
+| Phase 1 | Head only, LR=1e-3, base frozen, 5 epochs |
+| Phase 2 | Last 40 layers unfrozen, LR=1e-5, 5 epochs |
 | Augmentation | Rotation, zoom, shift, brightness |
-| Dataset | ~43,000 images across 10 users |
+| Dataset | ~43,000 images · 10 users |
 
-> 📦 **Pre-trained model** available on HuggingFace Hub:
-> [`YOUR_HF_USERNAME/silent-voices-model`](https://huggingface.co/YOUR_HF_USERNAME/silent-voices-model)
+> 📦 **Pre-trained model:** [huggingface.co/noshin-nawar/silent-voices-model](https://huggingface.co/noshin-nawar/silent-voices-model)
 
 ---
 
 ## 🌐 API Reference
 
-**Base URL:** `https://silent-voices-api.onrender.com`
+**Base URL:** `https://silent-voices-1.onrender.com`
+
+> ⚠️ First request may take ~30s — Render free tier spins down after inactivity.
 
 ### `GET /`
-Health check.
 ```json
-{ "status": "ok", "classes": 47 }
+{ "status": "ok", "message": "Silent Voices API 🤙" }
 ```
 
 ### `GET /labels`
@@ -172,15 +167,8 @@ Returns full label map for all 47 classes.
 
 ### `POST /predict`
 
-**Request** — multipart form:
-```
-file: <image file>
-```
-
-**Request** — JSON (base64):
-```json
-{ "image": "data:image/jpeg;base64,..." }
-```
+**Form data:** `file: <image>`  
+**OR JSON:** `{ "image": "data:image/jpeg;base64,..." }`
 
 **Response:**
 ```json
@@ -204,58 +192,51 @@ file: <image file>
 
 | Dataset | Signs | Users | Est. Images |
 |---------|-------|-------|-------------|
-| Bangla Sign Language Dataset — Sign Digits | 10 | 10 | ~10,000 |
-| Bangla Sign Language Dataset — Sign Alphabets | 37 | 10 | ~33,300 |
+| Sign Digits | 10 (০–৯) | 10 | ~10,000 |
+| Sign Alphabets | 37 (অ–য) | 10 | ~33,300 |
 | **Combined** | **47** | **10** | **~43,300** |
 
-> ⚠️ The dataset is **not included** in this repository. It is kept local for training only.
+> The dataset is not included in this repo — kept local for training only.
 
 ---
 
 ## 🚢 Deployment
 
-### Frontend → Vercel
+### Frontend → [Vercel](https://silent-voices-three.vercel.app)
+- Root directory: `frontend`
+- Env var: `VITE_API_URL=https://silent-voices-1.onrender.com`
 
-1. Import repo on [vercel.com](https://vercel.com)
-2. Set root directory → `frontend`
-3. Add env var: `VITE_API_URL=https://your-backend.onrender.com`
-4. Deploy
-
-### Backend → Render
-
-1. Import repo on [render.com](https://render.com)
-2. Set root directory → `backend`
-3. Render auto-reads `render.yaml`
-4. Deploy
+### Backend → [Render](https://silent-voices-1.onrender.com)
+- Root directory: `backend`
+- Build: `pip install -r requirements.txt`
+- Start: `gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1`
+- Model auto-downloads from HuggingFace on first request
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
 1. Fork the repo
 2. Create a branch: `git checkout -b feature/your-feature`
-3. Commit: `git commit -m 'feat: add your feature'`
-4. Push: `git push origin feature/your-feature`
-5. Open a Pull Request
+3. Commit: `git commit -m 'feat: your feature'`
+4. Push and open a Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
-
----
-
-## 👩‍💻 Author
-
-Made with 💗 by **Noshin Nawar**
-
-[![GitHub](https://img.shields.io/badge/GitHub-noshin-nawar5-181717?style=flat-square&logo=github)](https://github.com/noshin-nawar5)
+MIT — see [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
+
+Made with 💗 by **Noshin Nawar**
+
+[![GitHub](https://img.shields.io/badge/GitHub-noshin--nawar5-181717?style=flat-square&logo=github)](https://github.com/noshin-nawar5)
+[![HuggingFace](https://img.shields.io/badge/🤗-noshin--nawar-ffcc00?style=flat-square)](https://huggingface.co/noshin-nawar)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-noshin--nawar5-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/noshin-nawar5)
+
 <sub>Built for Bangla Sign Language accessibility 🤙</sub>
+
 </div>
