@@ -50,45 +50,27 @@ def load_everything():
         return True
 
     try:
-        print("=== load_everything() START ===", flush=True)
-
-        # Step 1 — download files
-        download_model()
-
-        # Step 2 — verify files exist
-        for path in [MODEL_PATH, CI_PATH, LABELS_PATH]:
-            if not os.path.exists(path):
-                raise FileNotFoundError(f"Missing file: {path}")
-            print(f"✅ File OK: {path}", flush=True)
-
-        # Step 3 — load TF model
-        print("Importing TensorFlow...", flush=True)
         import tensorflow as tf
         from tensorflow.keras.models import load_model as tf_load
-        print(f"TF version: {tf.__version__}", flush=True)
 
         print("Loading model...", flush=True)
         _model = tf_load(MODEL_PATH)
-        print("✅ Model loaded.", flush=True)
 
-        # Step 4 — load label files
         with open(CI_PATH,     encoding="utf-8") as f: ci         = json.load(f)
         with open(LABELS_PATH, encoding="utf-8") as f: labels_raw = json.load(f)
 
         _label_map   = {**labels_raw["digits"], **labels_raw["alphabets"]}
         _idx_to_cls  = {v: k for k, v in ci.items()}
         _num_classes = len(ci)
-        _load_error  = None
         print(f"✅ {_num_classes} classes ready.", flush=True)
-        print("=== load_everything() DONE ===", flush=True)
         return True
 
     except Exception as e:
         _load_error = str(e)
         _model = None
-        print(f"❌ load_everything FAILED: {e}", flush=True)
+        print(f"❌ FAILED: {e}", flush=True)
+        import traceback
         print(traceback.format_exc(), flush=True)
-        sys.stdout.flush()
         return False
 
 
