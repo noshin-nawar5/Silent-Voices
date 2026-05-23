@@ -1,4 +1,4 @@
-import os, io, json, base64
+import os, io, json, base64, traceback
 import numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -11,65 +11,71 @@ BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH  = os.path.join(BASE_DIR, "bangla_sign_model.h5")
 CI_PATH     = os.path.join(BASE_DIR, "class_indices.json")
 LABELS_PATH = os.path.join(BASE_DIR, "labels.json")
-IMG_SIZE    = (96,96)   # must match training size
+IMG_SIZE    = (96, 96)
 
-# ── Lazy globals (loaded on first request) ────────────────────────────────
-model         = None
-class_indices = None
-LABEL_MAP     = None
-IDX_TO_CLS    = None
-NUM_CLASSES   = None
+# ── Lazy globals ──────────────────────────────────────────────────────────
+_model       = None
+_idx_to_cls  = None
+_label_map   = None
+_num_classes = None
 
 
 def download_model():
-    """Download model files from HuggingFace if not present."""
     from huggingface_hub import hf_hub_download
     REPO = "noshin-nawar/silent-voices-model"
-
     if not os.path.exists(MODEL_PATH):
-        print("⬇️  Downloading model from HuggingFace...")
-        hf_hub_download(repo_id=REPO, filename="bangla_sign_model.h5",  local_dir=BASE_DIR)
+        print("Downloading model...")
+        hf_hub_download(repo_id=REPO, filename="bangla_sign_model.h5", local_dir=BASE_DIR)
         print("✅ Model downloaded.")
-
     if not os.path.exists(CI_PATH):
-        print("⬇️  Downloading class_indices.json...")
+        print("Downloading class_indices.json...")
         hf_hub_download(repo_id=REPO, filename="class_indices.json", local_dir=BASE_DIR)
         print("✅ class_indices.json downloaded.")
 
 
 def load_everything():
-    """Load model + labels into globals. Called once on first request."""
-    global model, class_indices, LABEL_MAP, IDX_TO_CLS, NUM_CLASSES
+    global _model, _idx_to_cls, _label_map, _num_classes
 
-    if model is not None:
-        return  # already loaded
+    if _model is not None:
+        return True  # already loaded
 
-    import tensorflow as tf
-    from tensorflow.keras.models import load_model as tf_load
+    try:
+        import tensorflow as tf
+        from tensorflow.keras.models import load_model as tf_load
 
-    download_model()
+        download_model()
 
-    print("Loading model…")
-    model = tf_load(MODEL_PATH)
-    print("✅ Model loaded.")
+        print("Loading model...")
+        _model = tf_load(MODEL_PATH)
+        print("✅ Model loaded.")
 
-    with open(CI_PATH,     encoding="utf-8") as f: class_indices = json.load(f)
-    with open(LABELS_PATH, encoding="utf-8") as f: labels_raw    = json.load(f)
+        with open(CI_PATH,     encoding="utf-8") as f:
+            ci = json.load(f)
+        with open(LABELS_PATH, encoding="utf-8") as f:
+            labels_raw = json.load(f)
 
-    LABEL_MAP   = {**labels_raw["digits"], **labels_raw["alphabets"]}
-    IDX_TO_CLS  = {v: k for k, v in class_indices.items()}
-    NUM_CLASSES = len(class_indices)
-    print(f"✅ {NUM_CLASSES} classes ready.")
+        _label_map   = {**labels_raw["digits"], **labels_raw["alphabets"]}
+        _idx_to_cls  = {v: k for k, v in ci.items()}
+        _num_classes = len(ci)
+        print(f"✅ {_num_classes} classes ready.")
+        return True
+
+    except Exception as e:
+        print(f"❌ load_everything failed: {e}")
+        print(traceback.format_exc())
+        # Reset so next request tries again
+        _model = None
+        return False
 
 
-def preprocess(img_bytes: bytes) -> np.ndarray:
+def preprocess(img_bytes):
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB").resize(IMG_SIZE)
     arr = np.array(img, dtype=np.float32) / 255.0
     return np.expand_dims(arr, 0)
 
 
-def enrich(cls_name: str, confidence: float) -> dict:
-    info = LABEL_MAP.get(cls_name, {})
+def enrich(cls_name, confidence):
+    info = _label_map.get(cls_name, {})
     return {
         "class":      cls_name,
         "display":    info.get("display", cls_name),
@@ -84,20 +90,23 @@ def enrich(cls_name: str, confidence: float) -> dict:
 
 @app.route("/", methods=["GET"])
 def health():
-    """Health check — responds instantly without loading the model."""
     return jsonify({"status": "ok", "message": "Silent Voices API 🤙"})
 
 
 @app.route("/labels", methods=["GET"])
 def get_labels():
-    load_everything()
-    return jsonify(LABEL_MAP)
+    if not load_everything():
+        return jsonify({"error": "Model failed to load. Check logs."}), 500
+    return jsonify(_label_map)
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    load_everything()
+    # Load model — return clear error if it fails
+    if not load_everything():
+        return jsonify({"error": "Model not loaded. Check Render logs."}), 503
 
+    # Parse image from request
     if "file" in request.files:
         f = request.files["file"]
         if f.filename == "":
@@ -111,26 +120,27 @@ def predict():
     else:
         return jsonify({"error": "Send multipart/form-data 'file' or JSON 'image'"}), 400
 
+    # Run prediction
     try:
-        preds    = model.predict(preprocess(img_bytes), verbose=0)[0]
+        preds    = _model.predict(preprocess(img_bytes), verbose=0)[0]
         top5_idx = np.argsort(preds)[::-1][:5]
 
-        prediction = enrich(IDX_TO_CLS[top5_idx[0]], float(preds[top5_idx[0]]))
-        top5       = [enrich(IDX_TO_CLS[i], float(preds[i])) for i in top5_idx]
+        prediction = enrich(_idx_to_cls[top5_idx[0]], float(preds[top5_idx[0]]))
+        top5       = [enrich(_idx_to_cls[i], float(preds[i])) for i in top5_idx]
 
         all_scores = {
-            IDX_TO_CLS[i]: {
+            _idx_to_cls[i]: {
                 "confidence": round(float(preds[i]) * 100, 2),
-                **{k: LABEL_MAP.get(IDX_TO_CLS[i], {}).get(k, "")
+                **{k: _label_map.get(_idx_to_cls[i], {}).get(k, "")
                    for k in ("display", "type", "name")}
             }
-            for i in range(NUM_CLASSES)
+            for i in range(_num_classes)
         }
 
         return jsonify({"prediction": prediction, "top5": top5, "all_scores": all_scores})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 
 if __name__ == "__main__":
