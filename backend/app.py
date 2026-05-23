@@ -4,9 +4,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
 
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
 app = Flask(__name__)
 CORS(app, origins=["*"])
 
@@ -14,41 +11,55 @@ BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH  = os.path.join(BASE_DIR, "bangla_sign_model.h5")
 CI_PATH     = os.path.join(BASE_DIR, "class_indices.json")
 LABELS_PATH = os.path.join(BASE_DIR, "labels.json")
-IMG_SIZE    = (96, 96)
+IMG_SIZE    = (96,96)   # must match training size
 
-# ── Load on startup ───────────────────────────────────────────────────────
-from huggingface_hub import hf_hub_download
+# ── Lazy globals (loaded on first request) ────────────────────────────────
+model         = None
+class_indices = None
+LABEL_MAP     = None
+IDX_TO_CLS    = None
+NUM_CLASSES   = None
 
-if not os.path.exists(MODEL_PATH):
-    print("Downloading model from HuggingFace...")
-    hf_hub_download(
-        repo_id="noshin-nawar/silent-voices-model",
-        filename="bangla_sign_model.h5",
-        local_dir=BASE_DIR
-    )
-    print("✅ Model downloaded.")
 
-if not os.path.exists(CI_PATH):
-    print("Downloading class indices...")
-    hf_hub_download(
-        repo_id="noshin-nawar/silent-voices-model",
-        filename="class_indices.json",
-        local_dir=BASE_DIR
-    )
-    print("✅ Class indices downloaded.")
+def download_model():
+    """Download model files from HuggingFace if not present."""
+    from huggingface_hub import hf_hub_download
+    REPO = "noshin-nawar/silent-voices-model"
 
-print("Loading model…")
-model = load_model(MODEL_PATH)
-print("✅ Model loaded.")
+    if not os.path.exists(MODEL_PATH):
+        print("⬇️  Downloading model from HuggingFace...")
+        hf_hub_download(repo_id=REPO, filename="bangla_sign_model.h5",  local_dir=BASE_DIR)
+        print("✅ Model downloaded.")
 
-with open(CI_PATH,     encoding='utf-8') as f: class_indices = json.load(f)
-with open(LABELS_PATH, encoding='utf-8') as f: labels_raw    = json.load(f)
+    if not os.path.exists(CI_PATH):
+        print("⬇️  Downloading class_indices.json...")
+        hf_hub_download(repo_id=REPO, filename="class_indices.json", local_dir=BASE_DIR)
+        print("✅ class_indices.json downloaded.")
 
-# Flat label map: folder_name → {display, roman, name, type}
-LABEL_MAP   = {**labels_raw["digits"], **labels_raw["alphabets"]}
-IDX_TO_CLS  = {v: k for k, v in class_indices.items()}   # int → "digit_3" etc.
-NUM_CLASSES = len(class_indices)
-print(f"Classes: {NUM_CLASSES}")
+
+def load_everything():
+    """Load model + labels into globals. Called once on first request."""
+    global model, class_indices, LABEL_MAP, IDX_TO_CLS, NUM_CLASSES
+
+    if model is not None:
+        return  # already loaded
+
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model as tf_load
+
+    download_model()
+
+    print("Loading model…")
+    model = tf_load(MODEL_PATH)
+    print("✅ Model loaded.")
+
+    with open(CI_PATH,     encoding="utf-8") as f: class_indices = json.load(f)
+    with open(LABELS_PATH, encoding="utf-8") as f: labels_raw    = json.load(f)
+
+    LABEL_MAP   = {**labels_raw["digits"], **labels_raw["alphabets"]}
+    IDX_TO_CLS  = {v: k for k, v in class_indices.items()}
+    NUM_CLASSES = len(class_indices)
+    print(f"✅ {NUM_CLASSES} classes ready.")
 
 
 def preprocess(img_bytes: bytes) -> np.ndarray:
@@ -64,26 +75,29 @@ def enrich(cls_name: str, confidence: float) -> dict:
         "display":    info.get("display", cls_name),
         "roman":      info.get("roman", ""),
         "name":       info.get("name", cls_name),
-        "type":       info.get("type", "unknown"),   # digit | vowel | consonant
+        "type":       info.get("type", "unknown"),
         "confidence": round(confidence * 100, 2),
     }
 
 
+# ── Routes ────────────────────────────────────────────────────────────────
+
 @app.route("/", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "classes": NUM_CLASSES,
-                    "message": "Bangla Sign Language API 🤙"})
+    """Health check — responds instantly without loading the model."""
+    return jsonify({"status": "ok", "message": "Silent Voices API 🤙"})
 
 
 @app.route("/labels", methods=["GET"])
 def get_labels():
-    """Return the full label map — useful for the frontend reference panel."""
+    load_everything()
     return jsonify(LABEL_MAP)
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    # Accept multipart OR base64 JSON
+    load_everything()
+
     if "file" in request.files:
         f = request.files["file"]
         if f.filename == "":
@@ -95,7 +109,7 @@ def predict():
             return jsonify({"error": "JSON must have 'image' key (base64)"}), 400
         img_bytes = base64.b64decode(data["image"].split(",")[-1])
     else:
-        return jsonify({"error": "Send multipart/form-data with 'file' or JSON with 'image'"}), 400
+        return jsonify({"error": "Send multipart/form-data 'file' or JSON 'image'"}), 400
 
     try:
         preds    = model.predict(preprocess(img_bytes), verbose=0)[0]
@@ -104,7 +118,6 @@ def predict():
         prediction = enrich(IDX_TO_CLS[top5_idx[0]], float(preds[top5_idx[0]]))
         top5       = [enrich(IDX_TO_CLS[i], float(preds[i])) for i in top5_idx]
 
-        # Build all_scores split by type for the frontend bar charts
         all_scores = {
             IDX_TO_CLS[i]: {
                 "confidence": round(float(preds[i]) * 100, 2),
@@ -114,11 +127,7 @@ def predict():
             for i in range(NUM_CLASSES)
         }
 
-        return jsonify({
-            "prediction": prediction,
-            "top5":       top5,
-            "all_scores": all_scores,
-        })
+        return jsonify({"prediction": prediction, "top5": top5, "all_scores": all_scores})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
