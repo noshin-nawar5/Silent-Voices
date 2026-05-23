@@ -9,8 +9,8 @@
 
 <br/>
 
-[![Live Demo](https://img.shields.io/badge/🌸_Live_Demo-Visit_Site-f43f5e?style=for-the-badge)](https://silent-voices.vercel.app)
-[![API Status](https://img.shields.io/badge/API-Render-46e3b7?style=for-the-badge&logo=render)](https://silent-voices-api.onrender.com)
+[![Live Demo](https://img.shields.io/badge/🌸_Live_Demo-Visit_Site-f43f5e?style=for-the-badge)](https://silent-voices-three.vercel.app/
+[![API Status](https://img.shields.io/badge/API-Render-46e3b7?style=for-the-badge&logo=render)](https://silent-voices-1.onrender.com)
 [![License](https://img.shields.io/badge/License-MIT-a855f7?style=for-the-badge)](LICENSE)
 
 <br/>
