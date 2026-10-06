@@ -5,6 +5,8 @@
 
 *Bridging the communication gap through AI-powered hand sign recognition*
 
+<img width="1841" height="860" alt="Screenshot 2026-10-07 021612" src="https://github.com/user-attachments/assets/2c25a863-bb7c-4a49-99f2-939260852969" />
+
 ### 👥 Team
 
 This project was developed collaboratively by [Noshin Nawar](https://github.com/noshin-nawar5) and [Anika Sayeed](https://github.com/anikaIX).
