@@ -5,6 +5,14 @@
 
 *Bridging the communication gap through AI-powered hand sign recognition*
 
+### 👥 Team
+
+This project was developed collaboratively by [Noshin Nawar](https://github.com/noshin-nawar5) and [Anika Sayeed](https://github.com/anikaIX).
+
+### 💻 Contributions
+
+- **Anika Sayeed:** Contributed to MobileNetV2 model training and frontend development.
+- **Noshin Nawar:** Contributed to model development, backend/API development, and project integration.
 <br/>
 
 [![Live Demo](https://img.shields.io/badge/🌸_Live_Demo-Visit_Site-f43f5e?style=for-the-badge)](https://silent-voices-three.vercel.app)
@@ -231,7 +239,7 @@ MIT — see [LICENSE](LICENSE)
 
 <div align="center">
 
-Made with 💗 by **Noshin Nawar**
+Made with 💗 by **Noshin Nawar & Anika Sayeed**
 
 [![GitHub](https://img.shields.io/badge/GitHub-noshin--nawar5-181717?style=flat-square&logo=github)](https://github.com/noshin-nawar5)
 [![HuggingFace](https://img.shields.io/badge/🤗-noshin--nawar-ffcc00?style=flat-square)](https://huggingface.co/noshin-nawar)
