@@ -241,9 +241,14 @@ MIT — see [LICENSE](LICENSE)
 
 Made with 💗 by **Noshin Nawar & Anika Sayeed**
 
+**Noshin Nawar**
 [![GitHub](https://img.shields.io/badge/GitHub-noshin--nawar5-181717?style=flat-square&logo=github)](https://github.com/noshin-nawar5)
 [![HuggingFace](https://img.shields.io/badge/🤗-noshin--nawar-ffcc00?style=flat-square)](https://huggingface.co/noshin-nawar)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-noshin--nawar5-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/noshin-nawar5)
+
+**Anika Sayeed**
+[![GitHub](https://img.shields.io/badge/GitHub-anikaIX-181717?logo=github)](https://github.com/anikaIX)
+
 
 <sub>Built for Bangla Sign Language accessibility 🤙</sub>
 
